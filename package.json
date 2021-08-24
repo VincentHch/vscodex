@@ -1,8 +1,10 @@
 {
 	"name": "vscodex",
 	"displayName": "vscodex",
+	"publisher": "vhachin",
 	"description": "A non-official OpenAI extension for vscode",
 	"version": "0.0.1",
+	"repository": "https://github.com/VincentHch/vscodex",
 	"engines": {
 		"vscode": "^1.59.0"
 	},
@@ -18,8 +20,7 @@
 			{
 				"command": "vscodex.predict",
 				"title": "OpenAI - Complete snippet",
-				"icon": "icon/codex_icon.png",
-				"key": "ctrl+enter"
+				"icon": "asssets/codex_icon.png"
 			}
 		]
 	},

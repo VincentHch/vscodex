@@ -1,0 +1,76 @@
+{
+	"name": "vscodex",
+	"displayName": "vscodex",
+	"publisher": "vhachin",
+	"icon": "assets/codex_icon.png",
+	"description": "A non-official OpenAI extension for vscode",
+	"version": "0.1.0",
+	"repository": "https://github.com/VincentHch/vscodex",
+	"engines": {
+		"vscode": "^1.59.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onCommand:vscodex.predict"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "vscodex.predict",
+				"title": "OpenAI - Complete snippet",
+				"icon": "asssets/codex_icon.png"
+			}
+		],
+		"keybindings": [
+			{
+			  "command": "vscodex.predict",
+			  "key": "ctrl+enter"
+			}
+		],
+		"configuration": {
+			"title": "VSCodex",
+			"properties": {
+				"general.maxTokens": {
+					"type": "number",
+					"default": 500,
+					"scope": "application",
+					"description": "Maximum number of tokens predicted."
+				},
+				"general.temperature": {
+					"type": "number",
+					"default": 0.3,
+					"scope": "application",
+					"description": "0 -> deterministic model, 1 -> Random model"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.1.3",
+		"@types/mocha": "^8.2.2",
+		"@types/node": "14.x",
+		"@types/superagent": "^4.1.12",
+		"@types/vscode": "^1.59.0",
+		"@typescript-eslint/eslint-plugin": "^4.26.0",
+		"@typescript-eslint/parser": "^4.26.0",
+		"eslint": "^7.27.0",
+		"glob": "^7.1.7",
+		"mocha": "^8.4.0",
+		"typescript": "^4.3.2",
+		"vscode-test": "^1.5.2"
+	},
+	"dependencies": {
+		"superagent": "^6.1.0"
+	}
+}

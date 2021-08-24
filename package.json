@@ -2,6 +2,7 @@
 	"name": "vscodex",
 	"displayName": "vscodex",
 	"publisher": "vhachin",
+	"icon": "assets/codex_icon.png",
 	"description": "A non-official OpenAI extension for vscode",
 	"version": "0.0.1",
 	"repository": "https://github.com/VincentHch/vscodex",

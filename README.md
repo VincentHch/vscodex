@@ -8,6 +8,13 @@ An access is required in order to use the API. This access is granted through an
 echo 'export OPEN_AI_API_KEY=********' >> ~/.bashrc
 ```
 
+## Building vsix
+
+`npm install -g vsce`
+`npm install`
+`npm run compile`
+`vsce package`
+
 ## Features
 
 For now there is only one command:\

@@ -65,7 +65,7 @@
 				},
 				"general.stop": {
 					"type": "array",
-					"default": ["@"],
+					"default": ["@", "def", "class"],
 					"scope": "application",
 					"description": "Stop generation on these strings"
 				}

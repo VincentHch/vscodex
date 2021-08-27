@@ -36,11 +36,7 @@ const complete = async (prompt: string): Promise<string> => new Promise((resolve
 			return;
 		}
 		const resp = JSON.parse(response.text);
-
-		vscodexOut.appendLine("Secret:" + (process.env.OPENAI_API_KEY ?? vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY")));
-		vscodexOut.appendLine("response.text:"+ response.text);
-		vscodexOut.appendLine("Resp:"+resp);
-
+		
 		if (resp["choices"].length === 0) {
 			vscode.window.showWarningMessage("No code returned by the server.");
 			reject(new Error("No code returned by the server."));
@@ -52,7 +48,7 @@ const complete = async (prompt: string): Promise<string> => new Promise((resolve
 
 
 async function completeSelection(selectionText: string, selection: vscode.Selection) {
-	//validation for no text being selected
+	// validation for no text being selected
 	// TODO Might be a bug here sometimes, idk if it's just during development but sometimes
 	// it said I have no selection although I have.
 	if (selectionText.length === 0) {
@@ -105,7 +101,6 @@ export async function activate(context: vscode.ExtensionContext) {
 			const selection = editor.selection;
 
 			const selectionText = document.getText(selection);
-			vscodexOut.appendLine("selectionText:" + selectionText + "selection: " + selection);
 			await completeSelection(selectionText, selection);
 		}
 	});

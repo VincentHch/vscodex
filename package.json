@@ -7,7 +7,7 @@
 	"version": "0.1.0",
 	"repository": "https://github.com/VincentHch/vscodex",
 	"engines": {
-		"vscode": "^1.59.0"
+		"vscode": "^1.56.0"
 	},
 	"categories": [
 		"Other"
@@ -26,16 +26,22 @@
 		],
 		"keybindings": [
 			{
-			  "command": "vscodex.predict",
-			  "key": "ctrl+enter"
+				"command": "vscodex.predict",
+				"key": "ctrl+enter"
 			}
 		],
 		"configuration": {
 			"title": "VSCodex",
 			"properties": {
+				"general.OPENAI_API_KEY": {
+					"type": "string",
+					"default": "",
+					"scope": "application",
+					"description": "Your OpenAI secret, if environment variable OPENAI_API_KEY is set, that will be used instead."
+				},
 				"general.maxTokens": {
 					"type": "number",
-					"default": 500,
+					"default": 250,
 					"scope": "application",
 					"description": "Maximum number of tokens predicted."
 				},
@@ -44,11 +50,30 @@
 					"default": 0.3,
 					"scope": "application",
 					"description": "0 -> deterministic model, 1 -> Random model"
+				},
+				"general.frequency_penalty": {
+					"type": "number",
+					"default": 0.0,
+					"scope": "application",
+					"description": "0-1, Higher value -> Less chance of repeating same line"
+				},
+				"general.presence_penalty": {
+					"type": "number",
+					"default": 0.0,
+					"scope": "application",
+					"description": "0-1, Higher value -> Less chance of repeating same topic"
+				},
+				"general.stop": {
+					"type": "array",
+					"default": ["@"],
+					"scope": "application",
+					"description": "Stop generation on these strings"
 				}
 			}
 		}
 	},
 	"scripts": {
+		"build:install": "yarn && vsce package && code --install-extension *.vsix",
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",
@@ -61,7 +86,7 @@
 		"@types/mocha": "^8.2.2",
 		"@types/node": "14.x",
 		"@types/superagent": "^4.1.12",
-		"@types/vscode": "^1.59.0",
+		"@types/vscode": "^1.56.0",
 		"@typescript-eslint/eslint-plugin": "^4.26.0",
 		"@typescript-eslint/parser": "^4.26.0",
 		"eslint": "^7.27.0",

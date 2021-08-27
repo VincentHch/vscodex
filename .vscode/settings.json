@@ -6,6 +6,14 @@
     "search.exclude": {
         "out": true // set this to false to include "out" folder in search results
     },
+
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": true
+    },
+      // Add those two lines:
+    "editor.formatOnSave": true, // Tell VSCode to format files on save
+    "editor.defaultFormatter": "esbenp.prettier-vscode", // Tell VSCode to use Prettier as default file formatter
+
     // Turn off tsc task auto detection since we have the necessary tasks as npm scripts
     "typescript.tsc.autoDetect": "off",
     "git.ignoreLimitWarning": true

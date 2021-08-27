@@ -1,4 +1,4 @@
-# vscodex README
+# VSCodex
 
 Visual Studio Code extension to support new codex API by OpenAI.
 

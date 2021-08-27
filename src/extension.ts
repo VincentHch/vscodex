@@ -73,6 +73,10 @@ async function completeSelection(selectionText: string, selection: vscode.Select
 			});
 
 			const completion: string = await complete(selectionText);
+			
+			if (cancelToken.isCancellationRequested) {
+				return true;
+			}
 
 			if (vscode.window.activeTextEditor) {
 				vscode.window.activeTextEditor.edit(editBuilder => {
@@ -80,9 +84,6 @@ async function completeSelection(selectionText: string, selection: vscode.Select
 				});
 			}
 
-			if (cancelToken.isCancellationRequested) {
-				return true;
-			}
 		} catch (e) {
 			vscodexOut.appendLine("Error:"+e);
 		}

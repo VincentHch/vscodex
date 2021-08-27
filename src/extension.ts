@@ -31,7 +31,13 @@ const complete = async (prompt: string): Promise<string> => new Promise((resolve
 	.set("Authorization", "Bearer " + (process.env.OPENAI_API_KEY ?? vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY")))
 	.end((error: any, response: any) => {
 		if (error) {
-			vscode.window.showErrorMessage(""+error);
+			let message: string;
+			if (error.response.text) {
+				message = JSON.parse(error.response.text).error.message;
+			} else {
+				message = error;
+			}
+			vscode.window.showErrorMessage(message);
 			reject(error);
 			return;
 		}

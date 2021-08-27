@@ -10,50 +10,41 @@ const vscodexOut = vscode.window.createOutputChannel("vscodex");
 
 const CODEX_URL = "https://api.openai.com/v1/engines/davinci-codex/completions";
 
-const complete = async (prompt: string): Promise<string> => new Promise((resolve, reject) => {
-
-	let stop: string[] | null = vscode.workspace.getConfiguration("general").get("stop") ?? null;
-	if (Array.isArray(stop) && stop.length === 0) {
-		stop = null;
-	}
-
-	superagent
-	.post(CODEX_URL)
-	.send({
-		prompt: prompt,
-		temperature: vscode.workspace.getConfiguration("general").get("temperature"),
-		max_tokens: vscode.workspace.getConfiguration("general").get("maxTokens"),
-		top_p: 1,
-		presence_penalty: vscode.workspace.getConfiguration("general").get("presence_penalty"),
-		frequency_penalty: vscode.workspace.getConfiguration("general").get("frequency_penalty"),
-		stop: stop
-	})
-	.set("Authorization", "Bearer " + (process.env.OPENAI_API_KEY ?? vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY")))
-	.end((error: any, response: any) => {
-		if (error) {
-			let message: string;
-			if (error.response.text) {
-				message = JSON.parse(error.response.text).error.message;
-			} else {
-				message = error;
-			}
-			vscode.window.showErrorMessage(message);
-			reject(error);
-			return;
-		}
-		const resp = JSON.parse(response.text);
-		
-		if (resp["choices"].length === 0) {
-			vscode.window.showWarningMessage("No code returned by the server.");
-			reject(new Error("No code returned by the server."));
-		} else {
-			resolve(String(resp["choices"][0]["text"]));
-		}
+const complete = async (prompt: string, stop: string[] | null): Promise<string> => {
+	
+	return new Promise((resolve, reject) => {
+		superagent
+			.post(CODEX_URL)
+			.send({
+				prompt: prompt,
+				temperature: vscode.workspace.getConfiguration("general").get("temperature"),
+				max_tokens: vscode.workspace.getConfiguration("general").get("maxTokens"),
+				top_p: 1,
+				presence_penalty: vscode.workspace.getConfiguration("general").get("presence_penalty"),
+				frequency_penalty: vscode.workspace.getConfiguration("general").get("frequency_penalty"),
+				stop: stop
+			})
+			.set("Authorization", "Bearer " + (process.env.OPENAI_API_KEY ?? vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY")))
+			.end((error: any, response: any) => {
+				if (error) {
+					vscode.window.showErrorMessage(""+error);
+					reject(error);
+					return;
+				}
+				const resp = JSON.parse(response.text);
+				
+				if (resp["choices"].length === 0) {
+					vscode.window.showWarningMessage("No code returned by the server.");
+					reject(new Error("No code returned by the server."));
+				} else {
+					resolve(String(resp["choices"][0]["text"]));
+				}
+			});
 	});
-});
+};
 
 
-async function completeSelection(selectionText: string, selection: vscode.Selection) {
+const completeSelection = async (selectionText: string, selection: vscode.Selection) => {
 	// validation for no text being selected
 	// TODO Might be a bug here sometimes, idk if it's just during development but sometimes
 	// it said I have no selection although I have.
@@ -62,18 +53,34 @@ async function completeSelection(selectionText: string, selection: vscode.Select
 		return;
 	}
 
+	const userStop = await vscode.window.showInputBox({
+		title: "Stop sequence", 
+		prompt: "Stop generation on this sequence, in addition to stop sequences in settings\n"
+	});
+
+	let stop: string[] | null = [...vscode.workspace.getConfiguration("general").get("stop") as string[]] ?? null;
+	
+	if (userStop && stop) {
+		stop.push(userStop);
+	}
+
+	if (Array.isArray(stop) && stop.length === 0) {
+		stop = null;
+	}
+
 	const DO_CANCEL = await vscode.window.withProgress({
 		cancellable: true,
 		location: vscode.ProgressLocation.Notification,
 		title: "VSCodex",
 	}, async (progress, cancelToken) => {
 		try {
+			
 			progress.report({
 				message: "Loading Codex result ..."
 			});
 
-			const completion: string = await complete(selectionText);
-			
+			const completion: string = await complete(selectionText, stop);
+
 			if (cancelToken.isCancellationRequested) {
 				return true;
 			}
@@ -83,7 +90,6 @@ async function completeSelection(selectionText: string, selection: vscode.Select
 					editBuilder.insert(selection.end, completion);
 				});
 			}
-
 		} catch (e) {
 			vscodexOut.appendLine("Error:"+e);
 		}
@@ -94,7 +100,7 @@ async function completeSelection(selectionText: string, selection: vscode.Select
 	if (DO_CANCEL) {
 		return;
 	}
-}
+};
 
 
 // this method is called when your extension is activated

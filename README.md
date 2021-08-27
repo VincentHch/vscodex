@@ -1,22 +1,19 @@
-# vscodex README
+# VSCodex
 
-Visual Studio Code extension to support new codex API by OpenAI.
+Visual Studio Code extension to support the new codex API by OpenAI.
 
-An access is required in order to use the API. This access is granted through an **API key** and the key must be in the environment variable as `OPENAI_API_KEY`.
+An *API key* (access token) is required in order to use this extension. This token is issued by OpenAI and must be in an environment variable named `OPENAI_API_KEY`. You can alternatively specify the API key in the extension settings although this might be less secure, and is generally discouraged.
 
 ```
 echo 'export OPENAI_API_KEY=********' >> ~/.bashrc
 ```
 
-## Building vsix
+## Building and installing extension
 
 ```
-npm install -g vsce
-npm install
-npm run compile
-vsce package
-code --install-extension ./vscodex-*.vsix
+npm install -g vsce && npm run build:install
 ```
+
 
 ## Features
 

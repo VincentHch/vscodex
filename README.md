@@ -8,7 +8,7 @@ An access is required in order to use the API. This access is granted through an
 echo 'export OPENAI_API_KEY=********' >> ~/.bashrc
 ```
 
-## Building vsix
+## Building and installing extension
 
 ```
 npm install -g vsce && npm run build:install

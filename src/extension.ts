@@ -10,38 +10,42 @@ const vscodexOut = vscode.window.createOutputChannel("vscodex");
 
 const CODEX_URL = "https://api.openai.com/v1/engines/davinci-codex/completions";
 
-const complete = async (prompt: string, stop: string[] | null): Promise<string> => {
+const complete = async (prompt: string, stop: string[] | null): Promise<string> => new Promise((resolve, reject) => {
 	
-	return new Promise((resolve, reject) => {
-		superagent
-			.post(CODEX_URL)
-			.send({
-				prompt: prompt,
-				temperature: vscode.workspace.getConfiguration("general").get("temperature"),
-				max_tokens: vscode.workspace.getConfiguration("general").get("maxTokens"),
-				top_p: 1,
-				presence_penalty: vscode.workspace.getConfiguration("general").get("presence_penalty"),
-				frequency_penalty: vscode.workspace.getConfiguration("general").get("frequency_penalty"),
-				stop: stop
-			})
-			.set("Authorization", "Bearer " + (process.env.OPENAI_API_KEY ?? vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY")))
-			.end((error: any, response: any) => {
-				if (error) {
-					vscode.window.showErrorMessage(""+error);
-					reject(error);
-					return;
-				}
-				const resp = JSON.parse(response.text);
-				
-				if (resp["choices"].length === 0) {
-					vscode.window.showWarningMessage("No code returned by the server.");
-					reject(new Error("No code returned by the server."));
+	superagent
+		.post(CODEX_URL)
+		.send({
+			prompt: prompt,
+			temperature: vscode.workspace.getConfiguration("general").get("temperature"),
+			max_tokens: vscode.workspace.getConfiguration("general").get("maxTokens"),
+			top_p: 1,
+			presence_penalty: vscode.workspace.getConfiguration("general").get("presence_penalty"),
+			frequency_penalty: vscode.workspace.getConfiguration("general").get("frequency_penalty"),
+			stop: stop
+		})
+		.set("Authorization", "Bearer " + (process.env.OPENAI_API_KEY ?? vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY")))
+		.end((error: any, response: any) => {
+			if (error) {
+				let message: string;
+				if (error.response.text) {
+					message = JSON.parse(error.response.text).error.message;
 				} else {
-					resolve(String(resp["choices"][0]["text"]));
+					message = error;
 				}
-			});
-	});
-};
+				vscode.window.showErrorMessage(message);
+				reject(error);
+				return;
+			}
+			const resp = JSON.parse(response.text);
+			
+			if (resp["choices"].length === 0) {
+				vscode.window.showWarningMessage("No code returned by the server.");
+				reject(new Error("No code returned by the server."));
+			} else {
+				resolve(String(resp["choices"][0]["text"]));
+			}
+		});
+});
 
 
 const completeSelection = async (selectionText: string, selection: vscode.Selection) => {
@@ -91,7 +95,8 @@ const completeSelection = async (selectionText: string, selection: vscode.Select
 				});
 			}
 		} catch (e) {
-			vscodexOut.appendLine("Error:"+e);
+			vscodexOut.appendLine("Error: "+e);
+			vscode.window.showErrorMessage(e);
 		}
 
 		return false;

@@ -13,7 +13,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscodex.predict"
+		"onCommand:vscodex.predict",
+		"onCommand:vscodex.refactor"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -22,12 +23,21 @@
 				"command": "vscodex.predict",
 				"title": "OpenAI - Complete snippet",
 				"icon": "asssets/codex_icon.png"
+			},
+			{
+				"command": "vscodex.refactor",
+				"title": "OpenAI - Refactor snippet",
+				"icon": "asssets/codex_icon.png"
 			}
 		],
 		"keybindings": [
 			{
 				"command": "vscodex.predict",
 				"key": "ctrl+enter"
+			},
+			{
+				"command": "vscodex.refactor",
+				"key": "ctrl+shift+enter"
 			}
 		],
 		"configuration": {
@@ -53,13 +63,13 @@
 				},
 				"general.frequency_penalty": {
 					"type": "number",
-					"default": 0.0,
+					"default": 0.1,
 					"scope": "application",
 					"description": "0-1, Higher value -> Less chance of repeating same line"
 				},
 				"general.presence_penalty": {
 					"type": "number",
-					"default": 0.0,
+					"default": 0.1,
 					"scope": "application",
 					"description": "0-1, Higher value -> Less chance of repeating same topic"
 				},

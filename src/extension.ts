@@ -47,32 +47,13 @@ const complete = async (prompt: string, stop: string[] | null): Promise<string> 
 		});
 });
 
+const completeWithProgress = async(
+	prompt: string, 
+	stop: string[] | null, 
+	completionCallback: (completion: string) => void
+): Promise<any> => {
 
-const completeSelection = async (selectionText: string, selection: vscode.Selection) => {
-	// validation for no text being selected
-	// TODO Might be a bug here sometimes, idk if it's just during development but sometimes
-	// it said I have no selection although I have.
-	if (selectionText.length === 0) {
-		vscode.window.showWarningMessage("No text selected! Please select some text to get snippet");
-		return;
-	}
-
-	const userStop = await vscode.window.showInputBox({
-		title: "Stop sequence", 
-		prompt: "Stop generation on this sequence, in addition to stop sequences in settings\n"
-	});
-
-	let stop: string[] | null = [...vscode.workspace.getConfiguration("general").get("stop") as string[]] ?? null;
-	
-	if (userStop && stop) {
-		stop.push(userStop);
-	}
-
-	if (Array.isArray(stop) && stop.length === 0) {
-		stop = null;
-	}
-
-	const DO_CANCEL = await vscode.window.withProgress({
+	const DID_CANCEL = await vscode.window.withProgress({
 		cancellable: true,
 		location: vscode.ProgressLocation.Notification,
 		title: "VSCodex",
@@ -83,47 +64,125 @@ const completeSelection = async (selectionText: string, selection: vscode.Select
 				message: "Loading Codex result ..."
 			});
 
-			const completion: string = await complete(selectionText, stop);
+			const completion: string = await complete(prompt, stop);
 
 			if (cancelToken.isCancellationRequested) {
 				return true;
 			}
 
-			if (vscode.window.activeTextEditor) {
-				vscode.window.activeTextEditor.edit(editBuilder => {
-					editBuilder.insert(selection.end, completion);
-				});
-			}
+			completionCallback(completion);
 		} catch (e) {
 			vscodexOut.appendLine("Error: "+e);
-			vscode.window.showErrorMessage(e);
+			vscode.window.showErrorMessage(e as string ?? "Unknown Error");
 		}
 
 		return false;
 	});
 
-	if (DO_CANCEL) {
-		return;
-	}
+	return DID_CANCEL;
 };
 
+const getStop = async (): Promise<{ stop: string[] | null, cancel: boolean }> => {
+	const userStop = await vscode.window.showInputBox({
+		title: "Stop sequence (optional)", 
+		prompt: "Stop generation on this sequence, in addition to stop sequences in settings.\r\n"
+	});
+
+	if (userStop === undefined) {
+        return {stop: [], cancel: true};
+    }
+
+	let stop: string[] | null = [...vscode.workspace.getConfiguration("general").get("stop") as string[]] ?? null;
+
+	if (userStop && stop) {
+		stop.push(userStop);
+	}
+
+	if (Array.isArray(stop) && stop.length === 0) {
+		stop = null;
+	}
+
+	return {stop: stop, cancel: false};
+};
+
+const completeSelection = async (selectionText: string, selection: vscode.Selection) => {
+	if (selectionText.length === 0) {
+		vscode.window.showWarningMessage("No text selected! Please select some text to get snippet");
+		return;
+	}
+
+	const {stop, cancel} = await getStop();
+	if (cancel) {
+		return;
+	}
+
+	const prompt = selectionText + "\n\n";
+	completeWithProgress(selectionText, stop, completion => {
+		if (vscode.window.activeTextEditor) {
+			vscode.window.activeTextEditor.edit(editBuilder => {
+				editBuilder.insert(selection.end, completion);
+			});
+		}
+	});
+};
+
+
+const refactorSelection = async (selectionText: string, selection: vscode.Selection) => {
+	// validation for no text being selected
+	// TODO Might be a bug here sometimes, idk if it's just during development but sometimes
+	// it said I have no selection although I have.
+	if (selectionText.length === 0) {
+		vscode.window.showWarningMessage("No text selected! Please select some text to get snippet");
+		return;
+	}
+
+	const {stop, cancel} = await getStop();
+	if (cancel) {
+		return;
+	}
+
+	const refactorComment = await vscode.window.showInputBox({
+		title: "Refactor comment (leave blank for general improvement)", 
+		prompt: "Don't forget to include comment and refer to old code as \"Above\",\r\ne.g. \"\"\" Above changed to not do X. \"\"\"\r\n"
+	});
+
+	const prompt = selectionText + "\r\n\r\n" + refactorComment;
+	
+	completeWithProgress(prompt, stop, completion => {
+		if (vscode.window.activeTextEditor) {
+			vscode.window.activeTextEditor.edit(editBuilder => {
+				editBuilder.replace(selection, completion);
+			});
+		}
+	});
+};
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
 
-	const disposable = vscode.commands.registerCommand("vscodex.predict", async function() {
+	const withSelection = async (callback: (selectionText: string, selection: any) => Promise<any>) => {
 		const editor = vscode.window.activeTextEditor;
 		if (editor) {
 			const document = editor.document;
 			const selection = editor.selection;
 
 			const selectionText = document.getText(selection);
-			await completeSelection(selectionText, selection);
+
+			callback(selectionText, selection);
 		}
+	};
+
+	const vscodexPredict = vscode.commands.registerCommand("vscodex.predict", async function() {
+		withSelection(completeSelection);
 	});
 	
-	context.subscriptions.push(disposable);
+	const vscodexRefactor = vscode.commands.registerCommand("vscodex.refactor", async function() {
+		withSelection(refactorSelection);
+	});
+
+	context.subscriptions.push(vscodexPredict);
+	context.subscriptions.push(vscodexRefactor);
 }
 
 // this method is called when your extension is deactivated

@@ -14,8 +14,9 @@ echo 'export OPENAI_API_KEY=********' >> ~/.bashrc
 npm install -g vsce && npm run build:install
 ```
 
-
 ## Features
+
+https://user-images.githubusercontent.com/48289861/131251824-f8ffc248-fd96-4792-8df6-a5fc779eb03d.mov
 
 ### Complete snippet (`vscodex.predict`)
 **Shortcut**: `ctrl+enter`
@@ -31,4 +32,4 @@ To avoid predicting more code than needed, stop-sequences can be specified like 
 
 
 
-![animation](assets/vscodex_demo.mov)
+

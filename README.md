@@ -17,8 +17,18 @@ npm install -g vsce && npm run build:install
 
 ## Features
 
-For now there is only one command:\
-"OpenAI - Complete snippet" `vscodex.predict`\
+### Complete snippet (`vscodex.predict`)
 **Shortcut**: `ctrl+enter`
 
-![animation](assets/animation.gif)
+### Set level and complete snippet
+**Shortcut**: `ctrl+shift+enter`
+
+To avoid predicting more code than needed, stop-sequences can be specified like `class`. A level can be set and modified in the extension.
+* Function-level: will only complete your function
+* Class-level: will only complete your class
+* File-level: No restrictions
+* Custom-level: User specified stop sequence.
+
+
+
+![animation](assets/vscodex_demo.mov)

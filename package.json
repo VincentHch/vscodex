@@ -13,14 +13,20 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscodex.predict"
+		"onCommand:vscodex.predict",
+		"onCommand:vscodex.setLevelAndPredict"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "vscodex.predict",
-				"title": "OpenAI - Complete snippet",
+				"title": "VScodex: Complete snippet",
+				"icon": "asssets/codex_icon.png"
+			},
+			{
+				"command": "vscodex.setLevelAndPredict",
+				"title": "VScodex: Set level and complete snippet",
 				"icon": "asssets/codex_icon.png"
 			}
 		],
@@ -28,6 +34,10 @@
 			{
 				"command": "vscodex.predict",
 				"key": "ctrl+enter"
+			},
+			{
+				"command": "vscodex.setLevelAndPredict",
+				"key": "ctrl+shift+enter"
 			}
 		],
 		"configuration": {
@@ -37,7 +47,7 @@
 					"type": "string",
 					"default": "",
 					"scope": "application",
-					"description": "Your OpenAI secret, if environment variable OPENAI_API_KEY is set, that will be used instead."
+					"description": "Your OpenAI secret, if environment variable OPENAI_API_KEY is set (advised option), that will be used instead."
 				},
 				"general.maxTokens": {
 					"type": "number",
@@ -51,23 +61,35 @@
 					"scope": "application",
 					"description": "0 -> deterministic model, 1 -> Random model"
 				},
-				"general.frequency_penalty": {
+				"general.frequencyPenalty": {
 					"type": "number",
 					"default": 0.0,
 					"scope": "application",
 					"description": "0-1, Higher value -> Less chance of repeating same line"
 				},
-				"general.presence_penalty": {
+				"general.presencePenalty": {
 					"type": "number",
 					"default": 0.0,
 					"scope": "application",
 					"description": "0-1, Higher value -> Less chance of repeating same topic"
 				},
-				"general.stop": {
-					"type": "array",
-					"default": ["@", "def", "class"],
+				"tokens.stopFunction": {
+					"type": "string",
+					"default": "def,class,@",
 					"scope": "application",
-					"description": "Stop generation on these strings"
+					"description": "Tokens (separated by a comma,without spaces) that start a new function. If 'function-level' is selected, prediction will stop when one of these token or a class-level token is encountered."
+				},
+				"tokens.stopClass": {
+					"type": "string",
+					"default": "class,@",
+					"scope": "application",
+					"description": "Tokens (separated by a comma,without spaces) that start a new class. If 'class-level' is selected, prediction will stop when one of these token is encountered."
+				},
+				"tokens.stopCustom": {
+					"type": "string",
+					"default": "",
+					"scope": "application",
+					"description": "Custom-level stop sequences (separated by a comma,without spaces)."
 				}
 			}
 		}

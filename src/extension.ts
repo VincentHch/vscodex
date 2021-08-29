@@ -1,6 +1,11 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+/* eslint-disable @typescript-eslint/naming-convention */
+
 import * as vscode from "vscode";
+
+import {getNextTokens} from "./openai_api";
+import {getApiKey, getDefaultConfig} from "./config";
+import {getSelection} from "./context";
+import {storeDefaultLevel} from "./storage";
 
 // import superagent from 'superagent';
 const superagent = require("superagent");
@@ -8,112 +13,80 @@ const superagent = require("superagent");
 //Create output channel
 const vscodexOut = vscode.window.createOutputChannel("vscodex");
 
-const CODEX_URL = "https://api.openai.com/v1/engines/davinci-codex/completions";
+async function appendCurrentSelection(context: vscode.ExtensionContext) {
 
-const complete = async (prompt: string): Promise<string> => new Promise((resolve, reject) => {
+    let selectionObj = getSelection();
+    if (!selectionObj || !selectionObj.selection || !selectionObj.text)
+    {
+        vscode.window.showWarningMessage("No text selected! Please select some text.");
+        return;
+    }
+    let selection = selectionObj.selection;
+    let text = selectionObj.text;
 
-	let stop: string[] | null = vscode.workspace.getConfiguration("general").get("stop") ?? null;
-	if (Array.isArray(stop) && stop.length === 0) {
-		stop = null;
-	}
-
-	superagent
-	.post(CODEX_URL)
-	.send({
-		prompt: prompt,
-		temperature: vscode.workspace.getConfiguration("general").get("temperature"),
-		max_tokens: vscode.workspace.getConfiguration("general").get("maxTokens"),
-		top_p: 1,
-		presence_penalty: vscode.workspace.getConfiguration("general").get("presence_penalty"),
-		frequency_penalty: vscode.workspace.getConfiguration("general").get("frequency_penalty"),
-		stop: stop
-	})
-	.set("Authorization", "Bearer " + (process.env.OPENAI_API_KEY ?? vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY")))
-	.end((error: any, response: any) => {
-		if (error) {
-			let message: string;
-			if (error.response.text) {
-				message = JSON.parse(error.response.text).error.message;
-			} else {
-				message = error;
-			}
-			vscode.window.showErrorMessage(message);
-			reject(error);
-			return;
-		}
-		const resp = JSON.parse(response.text);
-		
-		if (resp["choices"].length === 0) {
-			vscode.window.showWarningMessage("No code returned by the server.");
-			reject(new Error("No code returned by the server."));
-		} else {
-			resolve(String(resp["choices"][0]["text"]));
-		}
-	});
-});
-
-
-async function completeSelection(selectionText: string, selection: vscode.Selection) {
-	// validation for no text being selected
-	// TODO Might be a bug here sometimes, idk if it's just during development but sometimes
-	// it said I have no selection although I have.
-	if (selectionText.length === 0) {
-		vscode.window.showWarningMessage("No text selected! Please select some text to get snippet");
-		return;
-	}
-
-	const DO_CANCEL = await vscode.window.withProgress({
-		cancellable: true,
+    // Display a progress bar while fetching the response
+	vscode.window.withProgress({
+        cancellable: true,
 		location: vscode.ProgressLocation.Notification,
 		title: "VSCodex",
-	}, async (progress, cancelToken) => {
-		try {
-			progress.report({
-				message: "Loading Codex result ..."
-			});
+	},
+    async (progress, cancelToken) => {
 
-			const completion: string = await complete(selectionText);
-			
-			if (cancelToken.isCancellationRequested) {
-				return true;
-			}
+        progress.report({
+            message: "Request sent, waiting the response..."
+            });
+            
+            await getNextTokens(text, getDefaultConfig(context), getApiKey())
+            .catch((error) => {
+                vscode.window.showErrorMessage(error.toString());
+            })
+            .then((completion) => {
 
-			if (vscode.window.activeTextEditor) {
-				vscode.window.activeTextEditor.edit(editBuilder => {
-					editBuilder.insert(selection.end, completion);
-				});
-			}
+                // Do not edit selection if the user requested cancelation
+                if (cancelToken.isCancellationRequested || !completion) {
+                    return;
+                }
 
-		} catch (e) {
-			vscodexOut.appendLine("Error:"+e);
-		}
-
-		return false;
+                if (vscode.window.activeTextEditor) {
+                    vscode.window.activeTextEditor.edit(editBuilder => {
+                        editBuilder.insert(selection.end, completion);
+                    });
+            }});
 	});
-
-	if (DO_CANCEL) {
-		return;
-	}
 }
 
+/**
+ * User select a "prediction size level", between function-level, class-level, and file-level.
+ * Each level contains stop keyword, for example in python: \
+ * * line-level: `stop = ["\n"]`
+ * * function-level: `stop = ["def", "@"]`
+ * * class-level: `stop = ["class"]`
+ * * file-level: `stop = []`
+ * 
+ * Sent stop sequence is the sum of all stop sequence of upper level.
+ * In the previous example, if function-level is selected, stop sequence will be ["def", "@", "class"]
+ */
+async function pickAndSetLevel(context: vscode.ExtensionContext) {
+    let choice = await vscode.window.showQuickPick(["Function", "Class", "File", "Custom"]);
+    if (choice) {
+        storeDefaultLevel(context, choice);
+    }
+}
 
-// this method is called when your extension is activated
+// this method is called when the extension is activated
 // your extension is activated the very first time the command is executed
 export async function activate(context: vscode.ExtensionContext) {
 
-	const disposable = vscode.commands.registerCommand("vscodex.predict", async function() {
-		const editor = vscode.window.activeTextEditor;
-		if (editor) {
-			const document = editor.document;
-			const selection = editor.selection;
-
-			const selectionText = document.getText(selection);
-			await completeSelection(selectionText, selection);
-		}
+	const predict = vscode.commands.registerCommand("vscodex.predict", async function() {
+		appendCurrentSelection(context);
 	});
-	
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(predict);
+
+    const setLevelAndPredict = vscode.commands.registerCommand("vscodex.setLevelAndPredict", async function() {
+        await pickAndSetLevel(context);
+        appendCurrentSelection(context);
+    });
 }
 
-// this method is called when your extension is deactivated
+// this method is called when the extension is deactivated
 export function deactivate() {}

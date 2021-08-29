@@ -29,5 +29,6 @@ To avoid predicting more code than needed, stop-sequences can be specified like 
 * File-level: No restrictions
 * Custom-level: User specified stop sequence.
 
+https://user-images.githubusercontent.com/48289861/131251824-f8ffc248-fd96-4792-8df6-a5fc779eb03d.mov
 
-https://github.com/VincentHch/vscodex/blob/main/assets/vscodex_demo.mov?raw=true
+

@@ -30,5 +30,4 @@ To avoid predicting more code than needed, stop-sequences can be specified like 
 * Custom-level: User specified stop sequence.
 
 
-
-![animation](assets/vscodex_demo.mov)
+https://github.com/VincentHch/vscodex/blob/main/assets/vscodex_demo.mov?raw=true

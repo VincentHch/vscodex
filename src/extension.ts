@@ -67,7 +67,8 @@ async function appendCurrentSelection(context: vscode.ExtensionContext) {
  * In the previous example, if function-level is selected, stop sequence will be ["def", "@", "class"]
  */
 async function pickAndSetLevel(context: vscode.ExtensionContext) {
-    let choice = await vscode.window.showQuickPick(["Function", "Class", "File", "Custom"]);
+    let choice = await vscode.window.showQuickPick(["Function", "Class", "File", "Custom"],
+                                                   {placeHolder: "Select a completion level."});
     if (choice) {
         storeDefaultLevel(context, choice);
     }

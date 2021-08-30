@@ -47,7 +47,7 @@
 					"type": "string",
 					"default": "",
 					"scope": "application",
-					"description": "Your OpenAI secret, if environment variable OPENAI_API_KEY is set (advised option), that will be used instead."
+					"description": "Your OpenAI secret, if empty, OPENAI_API_KEY environment variable will be used instead."
 				},
 				"general.maxTokens": {
 					"type": "number",

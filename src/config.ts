@@ -56,5 +56,5 @@ export const getDefaultConfig = (context: vscode.ExtensionContext, level: string
  * Get API key, firstly from the extension settings and if not found, then from the environment variables.
  */
 export const getApiKey = (): string => {
-    return vscode.workspace.getConfiguration("general").get("key") ?? process.env.OPENAI_API_KEY ?? "";
+    return vscode.workspace.getConfiguration("general").get("OPENAI_API_KEY") ?? process.env.OPENAI_API_KEY ?? "";
 };

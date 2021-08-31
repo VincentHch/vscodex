@@ -63,13 +63,13 @@
 				},
 				"general.frequencyPenalty": {
 					"type": "number",
-					"default": 0.0,
+					"default": 0,
 					"scope": "application",
 					"description": "0-1, Higher value -> Less chance of repeating same line"
 				},
 				"general.presencePenalty": {
 					"type": "number",
-					"default": 0.0,
+					"default": 0,
 					"scope": "application",
 					"description": "0-1, Higher value -> Less chance of repeating same topic"
 				},
@@ -95,7 +95,6 @@
 		}
 	},
 	"scripts": {
-		"build:install": "yarn && vsce package && code --install-extension *.vsix",
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
 		"watch": "tsc -watch -p ./",

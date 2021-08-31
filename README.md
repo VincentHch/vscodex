@@ -11,7 +11,10 @@ echo 'export OPENAI_API_KEY=********' >> ~/.bashrc
 ## Building and installing extension
 
 ```
-npm install -g vsce && npm run build:install
+npm install -g vsce
+npm install
+vsce package
+code --install-extension *.vsix
 ```
 
 ## Features
